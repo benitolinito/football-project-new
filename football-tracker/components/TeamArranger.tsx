@@ -6,6 +6,7 @@ export type PlayerOption = {
   id: string;
   label: string;
   position: string | null;
+  jerseyNumber: string | null;
 };
 
 type Slot = {
@@ -215,9 +216,11 @@ export default function TeamArranger({ players }: { players: PlayerOption[] }) {
                 <div className="absolute inset-x-4 top-[72%] border-t border-dashed border-white/35" />
 
                 {OFFENSE_11_PERSONNEL.map((slot) => {
+                  const assignedId = lineup[slot.id];
+                  const assignedPlayer = assignedId ? playerById.get(assignedId) : null;
                   const filteredPlayers = hasPositionData
                     ? players.filter((player) => {
-                        if (lineup[slot.id] === player.id) return true;
+                      if (lineup[slot.id] === player.id) return true;
                         return matchesSlotPosition(slot.label, player.position);
                       })
                     : players;
@@ -233,6 +236,11 @@ export default function TeamArranger({ players }: { players: PlayerOption[] }) {
                           <span className="rounded-full bg-zinc-900 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
                             {slot.label}
                           </span>
+                          {assignedPlayer?.jerseyNumber ? (
+                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700">
+                              #{assignedPlayer.jerseyNumber}
+                            </span>
+                          ) : null}
                         </div>
                         <select
                           value={lineup[slot.id] ?? ""}
@@ -286,9 +294,16 @@ export default function TeamArranger({ players }: { players: PlayerOption[] }) {
                   key={`summary-${slot.id}`}
                   className="flex items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2"
                 >
-                  <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-zinc-900 px-2 py-1 text-xs font-semibold text-white">
-                    {slot.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-zinc-900 px-2 py-1 text-xs font-semibold text-white">
+                      {slot.label}
+                    </span>
+                    {assignedPlayer?.jerseyNumber ? (
+                      <span className="inline-flex items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+                        #{assignedPlayer.jerseyNumber}
+                      </span>
+                    ) : null}
+                  </div>
                   <span className="truncate text-right text-xs text-zinc-700">
                     {assignedPlayer?.label ?? "Unassigned"}
                   </span>

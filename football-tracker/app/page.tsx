@@ -51,6 +51,12 @@ function buildPlayerOptions(rows: TableRow[]): PlayerOption[] {
         getStringValue(row, ["name", "full_name", "player_name"]) ??
         [firstName, lastName].filter(Boolean).join(" ").trim();
       const position = getStringValue(row, ["position", "pos"]);
+      const jerseyNumber = getStringValue(row, [
+        "jersey_number",
+        "jersey",
+        "uniform_number",
+        "number",
+      ]);
       const team = getStringValue(row, [
         "team",
         "team_name",
@@ -63,6 +69,7 @@ function buildPlayerOptions(rows: TableRow[]): PlayerOption[] {
       return {
         id,
         position,
+        jerseyNumber,
         label:
           suffixParts.length > 0
             ? `${baseLabel} (${suffixParts.join(" · ")})`
