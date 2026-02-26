@@ -67,3 +67,11 @@ Canonical MVP contracts are defined in:
 - `lib/auth/roles.ts`
 
 These are the source for schema and query implementation in upcoming slices.
+
+## Supabase Schema
+
+PRD-aligned migrations now live at:
+
+- `../supabase/migrations`
+
+See `../supabase/README.md` for migration contents and local reset workflow.
