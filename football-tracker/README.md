@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dartmouth Football Personnel System (MVP Foundation)
 
-## Getting Started
+This app is the implementation baseline for the MVP described in the PRD.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS
+- Supabase (Postgres + Auth + RLS)
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy env template and fill values:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Root path redirects to `/dashboard`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Current Route Structure
 
-## Learn More
+- `/dashboard`: roster health (105-110 guardrail + target vs actual)
+- `/roster`: season roster table with PRD filters
+- `/players`: player directory with search and filters
+- `/players/[id]`: profile overview + notes/awards view/edit forms
+- `/scenarios`: sandbox create/switch/edit + archive/delete + official-vs-scenario comparison
+- `/lineup`: original lineup prototype (preserved)
+- `/login`: staff authentication
 
-To learn more about Next.js, take a look at the following resources:
+## Auth
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/login` uses Supabase email/password sign-in.
+- Protected routes (`/dashboard`, `/roster`, `/players`, `/scenarios`, `/lineup`) require an active Supabase session.
+- Role is resolved from `profiles.role` (`admin` or `staff`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Domain Contract Files
 
-## Deploy on Vercel
+Canonical MVP contracts are defined in:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `lib/domain/models.ts`
+- `lib/domain/positions.ts`
+- `lib/auth/roles.ts`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+These are the source for schema and query implementation in upcoming slices.
+
+## Supabase Schema
+
+PRD-aligned migrations now live at:
+
+- `../supabase/migrations`
+
+See `../supabase/README.md` for migration contents and local reset workflow.
