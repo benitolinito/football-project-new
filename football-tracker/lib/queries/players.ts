@@ -78,6 +78,7 @@ export type PlayerProfileData = {
     id: string;
     noteText: string;
     createdAt: string;
+    seasonId: string | null;
     seasonLabel: string | null;
   }>;
   awards: Array<{
@@ -85,7 +86,12 @@ export type PlayerProfileData = {
     awardTag: string;
     awardLabel: string;
     createdAt: string;
+    seasonId: string | null;
     seasonLabel: string | null;
+  }>;
+  seasons: Array<{
+    id: string;
+    label: string;
   }>;
   errorMessage: string | null;
 };
@@ -182,6 +188,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         player: null,
         notes: [],
         awards: [],
+        seasons: [],
         errorMessage: playerError.message,
       };
     }
@@ -191,6 +198,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         player: null,
         notes: [],
         awards: [],
+        seasons: [],
         errorMessage: null,
       };
     }
@@ -218,6 +226,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         player: null,
         notes: [],
         awards: [],
+        seasons: [],
         errorMessage: notesError.message,
       };
     }
@@ -227,6 +236,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         player: null,
         notes: [],
         awards: [],
+        seasons: [],
         errorMessage: awardsError.message,
       };
     }
@@ -250,6 +260,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         id: note.id,
         noteText: note.note_text,
         createdAt: note.created_at,
+        seasonId: note.season_id,
         seasonLabel: note.season_id ? seasonMap.get(note.season_id) ?? null : null,
       })),
       awards: ((awardsData ?? []) as AwardRow[]).map((award) => ({
@@ -257,7 +268,12 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
         awardTag: award.award_tag,
         awardLabel: award.award_label,
         createdAt: award.created_at,
+        seasonId: award.season_id,
         seasonLabel: award.season_id ? seasonMap.get(award.season_id) ?? null : null,
+      })),
+      seasons: (seasonsData ?? []).map((season) => ({
+        id: season.id,
+        label: season.label,
       })),
       errorMessage: null,
     };
@@ -266,6 +282,7 @@ export async function getPlayerProfileData(playerId: string): Promise<PlayerProf
       player: null,
       notes: [],
       awards: [],
+      seasons: [],
       errorMessage: error instanceof Error ? error.message : "Unexpected player profile query error",
     };
   }
