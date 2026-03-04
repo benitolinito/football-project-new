@@ -2,7 +2,10 @@ import Link from "next/link";
 import { POSITION_GROUPS } from "@/lib/domain/positions";
 import { getScenariosPageData } from "@/lib/queries/scenarios";
 import {
+  archiveScenarioAction,
   createScenarioAction,
+  deleteScenarioAction,
+  restoreScenarioAction,
   updateScenarioRosterEntryAction,
   updateScenarioTargetAction,
 } from "./actions";
@@ -40,8 +43,9 @@ function deltaStyles(delta: number): string {
 export default async function ScenariosPage({ searchParams }: ScenariosPageProps) {
   const params = (await searchParams) ?? {};
   const scenarioId = getParam(params, "scenarioId");
+  const showArchived = getParam(params, "showArchived") === "1";
 
-  const data = await getScenariosPageData(scenarioId);
+  const data = await getScenariosPageData(scenarioId, showArchived);
   const selectedScenario = data.selectedScenario;
 
   return (
@@ -66,10 +70,22 @@ export default async function ScenariosPage({ searchParams }: ScenariosPageProps
       ) : null}
 
       <section className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-800">
-          Create Scenario From Season
-        </h3>
-        <form action={createScenarioAction} className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto] lg:items-end">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-800">
+            Create Scenario From Season
+          </h3>
+          <Link
+            href={showArchived ? "/scenarios" : "/scenarios?showArchived=1"}
+            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100"
+          >
+            {showArchived ? "Hide Archived" : "Show Archived"}
+          </Link>
+        </div>
+        <form
+          action={createScenarioAction}
+          className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto] lg:items-end"
+        >
+          <input type="hidden" name="showArchived" value={showArchived ? "1" : "0"} />
           <div>
             <label htmlFor="scenario-name" className="mb-1 block text-xs uppercase text-zinc-500">
               Scenario Name
@@ -112,7 +128,7 @@ export default async function ScenariosPage({ searchParams }: ScenariosPageProps
         <aside className="rounded-xl border border-zinc-200 bg-white p-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-800">Scenarios</h3>
           {data.scenarios.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-600">No scenarios yet.</p>
+            <p className="mt-3 text-sm text-zinc-600">No scenarios available.</p>
           ) : (
             <div className="mt-3 grid gap-2">
               {data.scenarios.map((scenario) => {
@@ -121,7 +137,7 @@ export default async function ScenariosPage({ searchParams }: ScenariosPageProps
                 return (
                   <Link
                     key={scenario.id}
-                    href={`/scenarios?scenarioId=${scenario.id}`}
+                    href={`/scenarios?scenarioId=${scenario.id}${showArchived ? "&showArchived=1" : ""}`}
                     className={`rounded-lg border px-3 py-2 text-sm ${
                       selected
                         ? "border-emerald-300 bg-emerald-50 text-emerald-900"
@@ -130,6 +146,9 @@ export default async function ScenariosPage({ searchParams }: ScenariosPageProps
                   >
                     <p className="font-medium">{scenario.name}</p>
                     <p className="mt-1 text-xs">{scenario.baseSeasonLabel}</p>
+                    <p className="mt-1 text-[11px] text-zinc-500">
+                      {scenario.archivedAt ? `Archived ${formatDate(scenario.archivedAt)}` : "Active"}
+                    </p>
                   </Link>
                 );
               })}
@@ -142,17 +161,107 @@ export default async function ScenariosPage({ searchParams }: ScenariosPageProps
             <p className="text-sm text-zinc-600">Choose a scenario to view and edit sandbox data.</p>
           ) : (
             <>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-semibold text-zinc-900">{selectedScenario.name}</h3>
-                <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-600">
-                  Base: {selectedScenario.baseSeasonLabel}
-                </span>
-                <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-600">
-                  Created: {formatDate(selectedScenario.createdAt)}
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-semibold text-zinc-900">{selectedScenario.name}</h3>
+                  <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-600">
+                    Base: {selectedScenario.baseSeasonLabel}
+                  </span>
+                  <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-600">
+                    Created: {formatDate(selectedScenario.createdAt)}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {!selectedScenario.archivedAt ? (
+                    <form action={archiveScenarioAction}>
+                      <input type="hidden" name="scenarioId" value={selectedScenario.id} />
+                      <input type="hidden" name="showArchived" value={showArchived ? "1" : "0"} />
+                      <button
+                        type="submit"
+                        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100"
+                      >
+                        Archive Scenario
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      <form action={restoreScenarioAction}>
+                        <input type="hidden" name="scenarioId" value={selectedScenario.id} />
+                        <button
+                          type="submit"
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100"
+                        >
+                          Restore Scenario
+                        </button>
+                      </form>
+                      <form action={deleteScenarioAction}>
+                        <input type="hidden" name="scenarioId" value={selectedScenario.id} />
+                        <input type="hidden" name="showArchived" value={showArchived ? "1" : "0"} />
+                        <button
+                          type="submit"
+                          className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
+                        >
+                          Delete Permanently
+                        </button>
+                      </form>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <section className="mt-4">
+              <section className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Official Headcount</p>
+                  <p className="mt-1 text-xl font-semibold text-zinc-900">{selectedScenario.officialRosterCount}</p>
+                </div>
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Scenario Headcount</p>
+                  <p className="mt-1 text-xl font-semibold text-zinc-900">{selectedScenario.scenarioRosterCount}</p>
+                </div>
+                <div className={`rounded-lg border px-3 py-2 ${deltaStyles(selectedScenario.headcountDelta)}`}>
+                  <p className="text-xs uppercase tracking-wide">Headcount Delta</p>
+                  <p className="mt-1 text-xl font-semibold">{selectedScenario.headcountDelta}</p>
+                </div>
+              </section>
+
+              <section className="mt-5 rounded-xl border border-zinc-200">
+                <div className="border-b border-zinc-200 bg-zinc-50 px-3 py-2">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-800">
+                    Official vs Scenario Comparison (By Position)
+                  </h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
+                    <thead className="bg-white">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold text-zinc-700">Pos</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-700">Official A/T</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-700">Scenario A/T</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-700">Headcount Delta</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-700">Target Delta</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {selectedScenario.positionComparison.map((row) => (
+                        <tr key={row.positionGroup} className="odd:bg-white even:bg-zinc-50/40">
+                          <td className="px-3 py-2 text-zinc-800">{row.positionGroup}</td>
+                          <td className="px-3 py-2 text-zinc-800">
+                            {row.officialActual}/{row.officialTarget}
+                          </td>
+                          <td className="px-3 py-2 text-zinc-800">
+                            {row.scenarioActual}/{row.scenarioTarget}
+                          </td>
+                          <td className="px-3 py-2 text-zinc-800">{row.headcountDelta}</td>
+                          <td className="px-3 py-2 text-zinc-800">{row.targetDelta}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section className="mt-5">
                 <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-800">
                   Scenario Targets vs Actual
                 </h4>

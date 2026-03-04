@@ -15,6 +15,9 @@ This directory contains migration SQL for the Dartmouth Football Personnel MVP.
 - `20260226122000_prd_bootstrap_and_seed.sql`
   - Auto-create `profiles` rows from `auth.users`
   - Seed seasons + baseline position targets
+- `20260226124000_prd_scenario_archive_fields.sql`
+  - Adds `archived_at` / `archived_by` to `scenarios`
+  - Supports safe archive/delete workflow
 
 ## Local workflow (Supabase CLI)
 

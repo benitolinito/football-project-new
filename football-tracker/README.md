@@ -38,7 +38,7 @@ Root path redirects to `/dashboard`.
 - `/roster`: season roster table with PRD filters
 - `/players`: player directory with search and filters
 - `/players/[id]`: profile overview + notes/awards view/edit forms
-- `/scenarios`: sandbox create/switch/edit (isolated scenario targets + roster entries)
+- `/scenarios`: sandbox create/switch/edit + archive/delete + official-vs-scenario comparison
 - `/lineup`: original lineup prototype (preserved)
 - `/login`: staff authentication
 

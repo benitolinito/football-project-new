@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { POSITION_GROUPS, PositionGroup } from "@/lib/domain/positions";
 import { getSupabaseClient } from "@/lib/supabaseClient";
@@ -14,6 +15,10 @@ function asTrimmedString(value: FormDataEntryValue | null): string {
 function asNullableString(value: FormDataEntryValue | null): string | null {
   const normalized = asTrimmedString(value);
   return normalized ? normalized : null;
+}
+
+function asBooleanFlag(value: FormDataEntryValue | null): boolean {
+  return asTrimmedString(value) === "1";
 }
 
 function isPositionGroup(value: string): value is PositionGroup {
@@ -32,6 +37,7 @@ export async function createScenarioAction(formData: FormData): Promise<void> {
 
   const name = asTrimmedString(formData.get("name"));
   const baseSeasonId = asTrimmedString(formData.get("baseSeasonId"));
+  const showArchived = asBooleanFlag(formData.get("showArchived"));
 
   if (!name || !baseSeasonId) {
     throw new Error("Scenario name and base season are required.");
@@ -115,6 +121,101 @@ export async function createScenarioAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/scenarios");
+  redirect(`/scenarios?scenarioId=${scenarioId}${showArchived ? "&showArchived=1" : ""}`);
+}
+
+export async function archiveScenarioAction(formData: FormData): Promise<void> {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const scenarioId = asTrimmedString(formData.get("scenarioId"));
+  const showArchived = asBooleanFlag(formData.get("showArchived"));
+
+  if (!scenarioId) {
+    throw new Error("Scenario ID is required.");
+  }
+
+  const supabase = await getSupabaseClient();
+
+  const { error } = await supabase
+    .from("scenarios")
+    .update({ archived_at: new Date().toISOString(), archived_by: sessionUser.id, updated_by: sessionUser.id })
+    .eq("id", scenarioId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/scenarios");
+  redirect(`/scenarios${showArchived ? "?showArchived=1" : ""}`);
+}
+
+export async function restoreScenarioAction(formData: FormData): Promise<void> {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const scenarioId = asTrimmedString(formData.get("scenarioId"));
+
+  if (!scenarioId) {
+    throw new Error("Scenario ID is required.");
+  }
+
+  const supabase = await getSupabaseClient();
+
+  const { error } = await supabase
+    .from("scenarios")
+    .update({ archived_at: null, archived_by: null, updated_by: sessionUser.id })
+    .eq("id", scenarioId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/scenarios");
+  redirect(`/scenarios?scenarioId=${scenarioId}&showArchived=1`);
+}
+
+export async function deleteScenarioAction(formData: FormData): Promise<void> {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const scenarioId = asTrimmedString(formData.get("scenarioId"));
+  const showArchived = asBooleanFlag(formData.get("showArchived"));
+
+  if (!scenarioId) {
+    throw new Error("Scenario ID is required.");
+  }
+
+  const supabase = await getSupabaseClient();
+
+  const { data: scenarioRow, error: scenarioError } = await supabase
+    .from("scenarios")
+    .select("archived_at")
+    .eq("id", scenarioId)
+    .maybeSingle();
+
+  if (scenarioError) {
+    throw new Error(scenarioError.message);
+  }
+
+  if (!scenarioRow?.archived_at) {
+    throw new Error("Scenario must be archived before deletion.");
+  }
+
+  const { error: deleteError } = await supabase.from("scenarios").delete().eq("id", scenarioId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  revalidatePath("/scenarios");
+  redirect(`/scenarios${showArchived ? "?showArchived=1" : ""}`);
 }
 
 export async function updateScenarioTargetAction(formData: FormData): Promise<void> {
