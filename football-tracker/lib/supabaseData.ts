@@ -21,7 +21,7 @@ export async function fetchTablePreview(
   }
 
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
     const { data, error } = await supabase.from(table).select("*").limit(limit);
 
     if (error) {

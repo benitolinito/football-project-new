@@ -1,4 +1,5 @@
 import { Role } from "@/lib/domain/models";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 type SessionUser = {
   id: string;
@@ -6,16 +7,34 @@ type SessionUser = {
   role: Role;
 };
 
-export async function getSessionUser(): Promise<SessionUser | null> {
-  const devRole = process.env.NEXT_PUBLIC_DEV_ROLE;
+type ProfileRow = {
+  role: Role;
+  email: string | null;
+};
 
-  if (devRole === "admin" || devRole === "staff") {
-    return {
-      id: "local-dev-user",
-      email: "dev@dartmouth.edu",
-      role: devRole,
-    };
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const supabase = await getSupabaseClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return null;
   }
 
-  return null;
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("role,email")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const profile = profileData as ProfileRow | null;
+  const role: Role = profile?.role === "admin" ? "admin" : "staff";
+
+  return {
+    id: user.id,
+    email: user.email ?? profile?.email ?? "unknown@dartmouth.edu",
+    role,
+  };
 }

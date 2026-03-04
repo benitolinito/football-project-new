@@ -104,7 +104,7 @@ function unique(values: Array<string | null | undefined>): string[] {
 
 export async function getPlayersListData(filters: SearchParams): Promise<PlayersListData> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
 
     let query = supabase
       .from("players")
@@ -170,7 +170,7 @@ export async function getPlayersListData(filters: SearchParams): Promise<Players
 
 export async function getPlayerProfileData(playerId: string): Promise<PlayerProfileData> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
 
     const [{ data: playerData, error: playerError }, { data: seasonsData }] = await Promise.all([
       supabase

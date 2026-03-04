@@ -138,7 +138,7 @@ function unique(values: Array<string | null | undefined>): string[] {
 
 export async function getRosterPageData(filters: RosterFilters): Promise<RosterPageData> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
 
     const { data: seasonData, error: seasonError } = await supabase
       .from("seasons")

@@ -54,7 +54,7 @@ function toRosterStatus(rosterCount: number): "under" | "on" | "over" {
 
 export async function getDashboardData(seasonId?: string): Promise<DashboardData> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
 
     const { data: seasonsData, error: seasonsError } = await supabase
       .from("seasons")

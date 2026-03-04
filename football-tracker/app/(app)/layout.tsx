@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 import { getSessionUser } from "@/lib/auth/session";
+import { signOutAction } from "./actions";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -10,16 +11,13 @@ const NAV_ITEMS = [
   { href: "/lineup", label: "Lineup Prototype" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
-    return (
-      <div className="mx-auto mt-10 max-w-xl rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-        Access denied. Set `NEXT_PUBLIC_DEV_ROLE` to `admin` or `staff` in
-        `.env.local` while auth integration is in progress.
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -40,6 +38,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               Role: {sessionUser.role}
             </p>
           </div>
+
+          <form action={signOutAction} className="mt-3">
+            <button
+              type="submit"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100"
+            >
+              Sign Out
+            </button>
+          </form>
 
           <nav className="mt-5 grid gap-1">
             {NAV_ITEMS.map((item) => (

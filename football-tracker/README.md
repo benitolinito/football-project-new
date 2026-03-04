@@ -34,29 +34,19 @@ Root path redirects to `/dashboard`.
 
 ## Current Route Structure
 
-- `/dashboard`: MVP implementation tracker
-- `/roster`: season roster workspace placeholder
-- `/players`: player profile workspace placeholder
+- `/dashboard`: roster health (105-110 guardrail + target vs actual)
+- `/roster`: season roster table with PRD filters
+- `/players`: player directory with search and filters
+- `/players/[id]`: profile overview + notes/awards view/edit forms
 - `/scenarios`: sandbox planning placeholder
 - `/lineup`: original lineup prototype (preserved)
+- `/login`: staff authentication
 
-## Auth Status
+## Auth
 
-Production auth is not wired yet. For local protected-shell access set:
-
-```bash
-NEXT_PUBLIC_DEV_ROLE=admin
-```
-
-or
-
-```bash
-NEXT_PUBLIC_DEV_ROLE=staff
-```
-
-in `.env.local`.
-
-If unset, protected routes show an access-denied placeholder.
+- `/login` uses Supabase email/password sign-in.
+- Protected routes (`/dashboard`, `/roster`, `/players`, `/scenarios`, `/lineup`) require an active Supabase session.
+- Role is resolved from `profiles.role` (`admin` or `staff`).
 
 ## Domain Contract Files
 

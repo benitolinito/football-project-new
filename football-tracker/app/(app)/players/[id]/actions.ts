@@ -13,10 +13,6 @@ function asNullableString(value: FormDataEntryValue | null): string | null {
   return normalized ? normalized : null;
 }
 
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
 export async function createNoteAction(formData: FormData): Promise<void> {
   const sessionUser = await getSessionUser();
   if (!sessionUser) throw new Error("Unauthorized");
@@ -29,8 +25,8 @@ export async function createNoteAction(formData: FormData): Promise<void> {
     throw new Error("Player ID and note text are required.");
   }
 
-  const supabase = getSupabaseClient();
-  const actorId = isUuid(sessionUser.id) ? sessionUser.id : null;
+  const supabase = await getSupabaseClient();
+  const actorId = sessionUser.id;
 
   const { error } = await supabase.from("notes").insert({
     player_id: playerId,
@@ -60,8 +56,8 @@ export async function updateNoteAction(formData: FormData): Promise<void> {
     throw new Error("Player ID, note ID, and note text are required.");
   }
 
-  const supabase = getSupabaseClient();
-  const actorId = isUuid(sessionUser.id) ? sessionUser.id : null;
+  const supabase = await getSupabaseClient();
+  const actorId = sessionUser.id;
 
   const { error } = await supabase
     .from("notes")
@@ -89,8 +85,8 @@ export async function createAwardAction(formData: FormData): Promise<void> {
     throw new Error("Player ID, award tag, and award label are required.");
   }
 
-  const supabase = getSupabaseClient();
-  const actorId = isUuid(sessionUser.id) ? sessionUser.id : null;
+  const supabase = await getSupabaseClient();
+  const actorId = sessionUser.id;
 
   const { error } = await supabase.from("awards").insert({
     player_id: playerId,
@@ -122,8 +118,8 @@ export async function updateAwardAction(formData: FormData): Promise<void> {
     throw new Error("Player ID, award ID, award tag, and award label are required.");
   }
 
-  const supabase = getSupabaseClient();
-  const actorId = isUuid(sessionUser.id) ? sessionUser.id : null;
+  const supabase = await getSupabaseClient();
+  const actorId = sessionUser.id;
 
   const { error } = await supabase
     .from("awards")
